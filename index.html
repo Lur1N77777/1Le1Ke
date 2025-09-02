@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>摄影约拍档期表 — 马卡龙风</title>
+<meta name="description" content="摄影约拍档期表（马卡龙配色、纯静态 HTML）" />
+<style>
+  :root{
+    --bg1:#fff7e6; --mac-pink:#F9C6D0; --mac-peach:#FFD6A5; --mac-mint:#BCEAD5;
+    --mac-lemon:#FFF1A6; --mac-sky:#BDE0FE; --mac-lav:#E8D3FF; --card-bg: rgba(255,255,255,0.6);
+    --glass-border: rgba(255,255,255,0.65);
+    --available: #86e3c3; --requested: #FFE08C; --confirmed: #FF9AA2;
+    --text:#333;
+    font-family: Inter, ui-sans-serif, system-ui, "PingFang SC", "Microsoft Yahei", Arial;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;color:var(--text);background: radial-gradient(circle at 20% 10%,#fff7e6 0%, transparent 40%),
+                                                   radial-gradient(circle at 80% 20%,#f3e5f5 0%, transparent 35%),
+                                                   radial-gradient(circle at 30% 90%,#e3f2fd 0%, transparent 30%);}
+
+  .container{max-width:1100px;margin:28px auto;padding:20px}
+  .card{background:var(--card-bg);backdrop-filter: blur(8px);border-radius:18px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,0.06);border:1px solid var(--glass-border)}
+  header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  h1{margin:0;font-size:24px}
+  .subtitle{font-size:13px;color:#666;margin-top:6px}
+
+  /* controls */
+  .controls{display:flex;gap:10px;align-items:center}
+  button.btn{border:0;padding:8px 12px;border-radius:12px;cursor:pointer;font-weight:600}
+  .btn-ghost{background:transparent;border:1px solid rgba(0,0,0,0.06)}
+  .btn-primary{background:linear-gradient(90deg,var(--mac-sky),var(--mac-pink));color:#fff}
+  .tiny{padding:6px 8px;font-size:13px;border-radius:10px}
+
+  /* legend */
+  .legend{display:flex;gap:10px;align-items:center;margin-top:10px;font-size:13px}
+  .legend .dot{width:12px;height:12px;border-radius:50%}
+
+  /* calendar */
+  .month-row{display:flex;align-items:center;gap:8px;margin-top:18px}
+  .month-title{font-weight:700;padding:6px 12px;border-radius:12px;background:linear-gradient(90deg,var(--mac-lemon),var(--mac-pink),var(--mac-sky));-webkit-background-clip:text;color:transparent}
+  .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-top:12px;padding:12px;border-radius:14px;background:rgba(255,255,255,0.75);backdrop-filter:blur(6px)}
+  .weekday{text-align:center;font-weight:600;padding:8px 6px;color:#6b6b6b}
+  .day{min-height:92px;border-radius:12px;padding:8px;position:relative;overflow:hidden;cursor:pointer;transition:transform .12s,box-shadow .12s}
+  .day:hover{transform:translateY(-6px)}
+  .day .date{font-weight:700}
+  .day .slot{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.85);border-radius:8px;padding:4px;margin-top:6px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .day.empty{background:linear-gradient(180deg,var(--available)99,var(--available)55)}
+  .day.requested{background:linear-gradient(180deg,var(--requested)99,var(--requested)55)}
+  .day.confirmed{background:linear-gradient(180deg,var(--confirmed)99,var(--confirmed)55)}
+  .other-month{opacity:.35}
+
+  /* modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(9,9,9,0.35);display:flex;align-items:center;justify-content:center;z-index:40}
+  .modal{width:94%;max-width:560px;background:white;border-radius:14px;padding:16px;border:1px solid rgba(0,0,0,0.05)}
+  .form-row{display:flex;gap:8px;margin-top:10px;align-items:center}
+  label.small{width:80px;font-size:13px;color:#444}
+  input[type="text"], input[type="tel"], input[type="time"], textarea, select{flex:1;padding:8px;border-radius:10px;border:1px solid #eaeaea;font-size:14px}
+  textarea{min-height:80px;resize:vertical}
+
+  .modal .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+  .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:600;font-size:13px}
+
+  /* owner panel */
+  .owner-panel{margin-top:18px;padding:12px;border-radius:12px;background:linear-gradient(90deg,var(--mac-pink),var(--mac-sky));color:#222}
+  .owner-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .owner-item{padding:10px;border-radius:10px;background:rgba(255,255,255,0.9);display:flex;gap:8px;align-items:center}
+
+  /* util */
+  .muted{color:#666;font-size:13px}
+  .flex{display:flex;gap:8px;align-items:center}
+  input[type=file]{display:none}
+  .small-link{font-size:13px;color:#444;text-decoration:underline;cursor:pointer;background:none;border:0;padding:0}
+  @media (max-width:720px){.day{min-height:86px}}
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <header>
+        <div>
+          <h1>📅 摄影约拍档期表</h1>
+          <div class="subtitle">马卡龙配色 · 玻璃拟态 · 本地保存 · 支持导入/导出 JSON</div>
+          <div class="legend" style="margin-top:8px">
+            <span class="dot" style="background:var(--available)"></span><span class="muted">可约</span>
+            <span class="dot" style="background:var(--requested)"></span><span class="muted">已申请（待确认）</span>
+            <span class="dot" style="background:var(--confirmed)"></span><span class="muted">已确认</span>
+          </div>
+        </div>
+        <div class="controls">
+          <button id="exportBtn" class="btn tiny btn-ghost">导出 JSON</button>
+          <label class="tiny btn-ghost" style="border-radius:10px;padding:6px 10px;cursor:pointer">
+            导入<input id="importFile" type="file" accept="application/json">
+          </label>
+          <button id="todayBtn" class="btn tiny btn-primary">回到本月</button>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="muted" style="font-size:13px">主理人模式</label>
+            <input id="ownerToggle" type="checkbox" />
+          </div>
+        </div>
+      </header>
+
+      <div class="month-row">
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="prev" class="btn btn-ghost tiny">← 上月</button>
+          <div class="month-title" id="monthTitle">2025 年 09 月</div>
+          <button id="next" class="btn btn-ghost tiny">下月 →</button>
+        </div>
+      </div>
+
+      <div class="calendar" id="calendar">
+        <!-- weekdays -->
+        <div class="weekday">周一</div><div class="weekday">周二</div><div class="weekday">周三</div><div class="weekday">周四</div><div class="weekday">周五</div><div class="weekday">周六</div><div class="weekday">周日</div>
+        <!-- days injected by JS -->
+      </div>
+
+      <div class="muted" style="text-align:center;margin-top:12px">提示：数据保存在此浏览器。需跨设备请使用 导出 / 导入 JSON。</div>
+    </div>
+
+    <!-- owner panel -->
+    <div class="owner-panel card" id="ownerPanel" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px">
+        <strong>🔐 主理人面板</strong>
+        <div class="muted">输入口令以管理：默认口令 <code>8888</code></div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+        <input id="ownerCode" type="text" placeholder="输入口令以解锁（8888）" style="padding:8px;border-radius:10px;border:1px solid #eee">
+        <button id="unlockBtn" class="btn tiny btn-primary">解锁</button>
+        <button id="lockBtn" class="btn tiny btn-ghost" style="display:none">锁定</button>
+      </div>
+
+      <div class="owner-list" id="ownerList" style="margin-top:12px">
+        <!-- items -->
+      </div>
+    </div>
+  </div>
+
+  <!-- modal template -->
+  <div id="modalRoot" style="display:none"></div>
+
+<script>
+/*
+  纯静态日历逻辑：
+  - bookings 存在 localStorage，结构：
+    { "YYYY-MM-DD": { "<slotId>": { status: "requested|confirmed", name, phone, note, slotLabel, createdAt } } }
+  - 默认时段数组 DEFAULT_SLOTS
+  - 点击日期弹窗提交 -> status=requested
+  - 主理人解锁后可确认（confirmed）或删除
+*/
+(function(){
+  const STORE_KEY = 'macaron-bookings-v1';
+  const OWNER_CODE = '8888'; // 可改
+  const DEFAULT_SLOTS = [
+    { id:'morning', label:'上午 09:00–12:00' },
+    { id:'afternoon', label:'下午 13:00–17:00' },
+    { id:'golden', label:'黄金时段 17:00–19:00' },
+    { id:'evening', label:'夜景 19:00–22:00' },
+  ];
+  const STATUS = { requested:'requested', confirmed:'confirmed' };
+
+  let bookings = loadBookings();
+  let viewDate = new Date(); viewDate.setDate(1);
+
+  // DOM
+  const calendarEl = document.getElementById('calendar');
+  const monthTitle = document.getElementById('monthTitle');
+  const prevBtn = document.getElementById('prev'), nextBtn = document.getElementById('next'), todayBtn = document.getElementById('todayBtn');
+  const modalRoot = document.getElementById('modalRoot');
+  const ownerToggle = document.getElementById('ownerToggle');
+  const ownerPanel = document.getElementById('ownerPanel');
+  const ownerCode = document.getElementById('ownerCode');
+  const unlockBtn = document.getElementById('unlockBtn'), lockBtn = document.getElementById('lockBtn');
+  const ownerList = document.getElementById('ownerList');
+  const exportBtn = document.getElementById('exportBtn'), importFile = document.getElementById('importFile');
+
+  prevBtn.addEventListener('click',()=>{changeMonth(-1)});
+  nextBtn.addEventListener('click',()=>{changeMonth(1)});
+  todayBtn.addEventListener('click',()=>{viewDate = new Date(); viewDate.setDate(1); render();});
+  ownerToggle.addEventListener('change',()=>{ownerPanel.style.display = ownerToggle.checked ? 'block' : 'none';});
+  unlockBtn.addEventListener('click',unlock);
+  lockBtn.addEventListener('click',lock);
+  exportBtn.addEventListener('click',exportJson);
+  importFile.addEventListener('change',onImport);
+
+  function loadBookings(){
+    try{
+      const raw = localStorage.getItem(STORE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }catch(e){ return {}; }
+  }
+  function saveBookings(){
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(bookings)); }catch(e){}
+  }
+  function ymd(d){
+    const Y = d.getFullYear();
+    const M = String(d.getMonth()+1).padStart(2,'0');
+    const D = String(d.getDate()).padStart(2,'0');
+    return `${Y}-${M}-${D}`;
+  }
+
+  function changeMonth(delta){
+    viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()+delta, 1);
+    render();
+  }
+
+  function buildGrid(date){
+    const first = new Date(date.getFullYear(), date.getMonth(), 1);
+    const last = new Date(date.getFullYear(), date.getMonth()+1, 0);
+    const firstWeekday = (first.getDay()+6)%7; // 周一=0
+    const cells = [];
+    for(let i=0;i<firstWeekday;i++) cells.push(null);
+    for(let d=1; d<=last.getDate(); d++){
+      cells.push(new Date(date.getFullYear(), date.getMonth(), d));
+    }
+    while(cells.length % 7 !== 0) cells.push(null);
+    return cells;
+  }
+
+  function render(){
+    monthTitle.textContent = `${viewDate.getFullYear()} 年 ${String(viewDate.getMonth()+1).padStart(2,'0')} 月`;
+    // remove old days (keep weekdays header 7 items)
+    // calendarEl contains 7 weekdays + days appended
+    // Clear everything after first 7 children
+    while(calendarEl.children.length > 7) calendarEl.removeChild(calendarEl.lastChild);
+
+    const grid = buildGrid(viewDate);
+    grid.forEach(d=>{
+      const el = document.createElement('div');
+      el.className = 'day';
+      if(!d){
+        el.classList.add('other-month');
+        el.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.45))';
+        el.innerHTML = '';
+        calendarEl.appendChild(el);
+        return;
+      }
+      const dateStr = ymd(d);
+      const isOther = d.getMonth() !== viewDate.getMonth();
+      if(isOther) el.classList.add('other-month');
+      const dayNum = d.getDate();
+      const container = document.createElement('div');
+      container.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
+                              <div class="date">${dayNum}</div>
+                              <div style="font-size:11px;background:#ffffffaa;padding:4px;border-radius:8px">点击预约</div>
+                            </div>`;
+      const slotsObj = bookings[dateStr] || {};
+      if(Object.keys(slotsObj).length === 0){
+        el.classList.add('empty');
+        const span = document.createElement('div'); span.className='slot'; span.textContent = '整天空闲 ✨';
+        container.appendChild(span);
+      } else {
+        // determine daily status (confirmed > requested)
+        const hasConfirmed = Object.values(slotsObj).some(s=>s.status === STATUS.confirmed);
+        const hasRequested = Object.values(slotsObj).some(s=>s.status === STATUS.requested);
+        if(hasConfirmed) el.classList.add('confirmed');
+        else if(hasRequested) el.classList.add('requested');
+        Object.entries(slotsObj).forEach(([slotId, s])=>{
+          const sEl = document.createElement('div'); sEl.className='slot';
+          sEl.innerHTML = `<span style="font-size:12px">${s.slotLabel || slotId}</span>`;
+          const badge = document.createElement('span'); badge.style.marginLeft='6px'; badge.style.marginInlineStart='auto';
+          badge.style.padding='2px 8px'; badge.style.borderRadius='999px'; badge.style.fontSize='11px';
+          if(s.status === STATUS.requested){ badge.textContent = '待确认'; badge.style.background = 'var(--requested)'; badge.style.color='#222'; badge.style.fontWeight='700';}
+          if(s.status === STATUS.confirmed){ badge.textContent = '已确认'; badge.style.background = 'var(--confirmed)'; badge.style.color='#fff'; badge.style.fontWeight='700';}
+          sEl.appendChild(badge);
+          container.appendChild(sEl);
+        });
+      }
+      el.appendChild(container);
+
+      el.addEventListener('click',()=>openModalForDate(d));
+      calendarEl.appendChild(el);
+    });
+
+    // update owner list if unlocked
+    if(ownerPanel.style.display !== 'none' && unlockBtn.style.display === 'none') buildOwnerList();
+  }
+
+  // modal builder
+  function openModalForDate(date){
+    const dateStr = ymd(date);
+    // build modal DOM
+    const mb = document.createElement('div'); mb.className='modal-backdrop';
+    const modal = document.createElement('div'); modal.className='modal';
+    modal.innerHTML = `<h3 style="margin:0">${dateStr} — 提交预约</h3>
+      <div style="margin-top:6px;color:#666">选时间段 / 填写称呼与联系方式，提交后将标黄（待确认）</div>
+      <div class="form-row"><label class="small">姓名</label><input id="f_name" type="text" placeholder="称呼"></div>
+      <div class="form-row"><label class="small">电话/微信</label><input id="f_phone" type="tel" placeholder="联系方式"></div>
+      <div class="form-row"><label class="small">时间段</label>
+        <div style="flex:1;display:flex;gap:8px;align-items:center">
+          <select id="f_slot" style="padding:8px;border-radius:10px;border:1px solid #eee">
+            ${DEFAULT_SLOTS.map(s=>`<option value="${s.id}">${s.label}</option>`).join('')}
+            <option value="custom">自定义</option>
+          </select>
+          <input id="f_start" type="time" style="display:none;padding:8px;border-radius:10px;border:1px solid #eee;width:120px">
+          <span id="dash" style="display:none">—</span>
+          <input id="f_end" type="time" style="display:none;padding:8px;border-radius:10px;border:1px solid #eee;width:120px">
+        </div>
+      </div>
+      <div class="form-row" style="align-items:flex-start"><label class="small">备注</label><textarea id="f_note" placeholder="拍摄主题 / 场景 / 人数等"></textarea></div>
+      <div class="actions"><button id="cancelBtn" class="btn btn-ghost tiny">取消</button><button id="submitBtn" class="btn btn-primary tiny">提交申请</button></div>`;
+
+    mb.appendChild(modal);
+    modalRoot.appendChild(mb);
+    modalRoot.style.display = 'block';
+
+    const f_slot = modal.querySelector('#f_slot');
+    const f_start = modal.querySelector('#f_start');
+    const f_end = modal.querySelector('#f_end');
+    const dash = modal.querySelector('#dash');
+
+    f_slot.addEventListener('change',()=>{
+      if(f_slot.value === 'custom'){ f_start.style.display='inline-block'; f_end.style.display='inline-block'; dash.style.display='inline-block';}
+      else { f_start.style.display='none'; f_end.style.display='none'; dash.style.display='none';}
+    });
+
+    modal.querySelector('#cancelBtn').addEventListener('click',()=>{
+      modalRoot.innerHTML=''; modalRoot.style.display='none';
+    });
+
+    modal.querySelector('#submitBtn').addEventListener('click',()=>{
+      const name = modal.querySelector('#f_name').value.trim();
+      const phone = modal.querySelector('#f_phone').value.trim();
+      const slotId = f_slot.value;
+      const note = modal.querySelector('#f_note').value.trim();
+      let slotLabel = DEFAULT_SLOTS.find(s=>s.id===slotId)?.label;
+      if(slotId === 'custom'){
+        const s = f_start.value, e = f_end.value;
+        if(!s || !e){ alert('请填写自定义起止时间'); return; }
+        slotLabel = `自定义 ${s}–${e}`;
+      }
+      if(!name || !phone){ alert('请填写姓名与联系方式'); return; }
+
+      if(!bookings[dateStr]) bookings[dateStr] = {};
+      // use timestamp key to avoid collide with same slot names -> but we want slotId as key; if custom may be 'custom-<time>'
+      const finalSlotId = slotId === 'custom' ? `custom-${Date.now()}` : slotId;
+      bookings[dateStr][finalSlotId] = { status: STATUS.requested, name, phone, note, slotLabel, createdAt: Date.now() };
+      saveBookings();
+      modalRoot.innerHTML=''; modalRoot.style.display='none';
+      render();
+      alert('申请已提交，等待主理人确认（该时段将被标黄）。');
+    });
+  }
+
+  // owner functions
+  function unlock(){
+    if(ownerCode.value.trim() === OWNER_CODE){
+      unlockBtn.style.display = 'none'; lockBtn.style.display = 'inline-block'; ownerCode.disabled = true;
+      buildOwnerList();
+      alert('已解锁主理人面板');
+    } else alert('口令错误');
+  }
+  function lock(){
+    unlockBtn.style.display = 'inline-block'; lockBtn.style.display = 'none'; ownerCode.disabled = false;
+    ownerList.innerHTML = '';
+  }
+
+  function buildOwnerList(){
+    ownerList.innerHTML = '';
+    const items = [];
+    Object.entries(bookings).forEach(([dateStr, slots])=>{
+      Object.entries(slots).forEach(([slotId, s])=>{
+        items.push({ dateStr, slotId, ...s });
+      });
+    });
+    if(items.length === 0){
+      ownerList.innerHTML = '<div class="muted">暂无申请/确认记录。</div>'; return;
+    }
+    // sort by date
+    items.sort((a,b)=>a.dateStr.localeCompare(b.dateStr));
+    items.forEach(it=>{
+      const itemEl = document.createElement('div'); itemEl.className='owner-item';
+      itemEl.innerHTML = `<div style="min-width:90px"><strong>${it.dateStr}</strong><div style="font-size:12px;color:#555">${it.slotLabel}</div></div>
+                          <div style="flex:1"><div style="font-weight:700">${it.name}（${it.phone}）</div><div style="color:#444">${it.note||''}</div></div>`;
+      const controls = document.createElement('div'); controls.style.display='flex'; controls.style.gap='6px';
+      if(it.status === STATUS.requested){
+        const confirmBtn = document.createElement('button'); confirmBtn.className='btn tiny btn-primary'; confirmBtn.textContent='确认';
+        confirmBtn.addEventListener('click',()=>{
+          if(confirm('确认后该时段将标为已确认（红色
