@@ -130,9 +130,10 @@
                         <label for="message" class="block text-sm font-medium text-gray-700">留言</label>
                         <textarea id="message" name="message" rows="3" class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-macaron-blue focus:border-macaron-blue"></textarea>
                     </div>
+                    <div id="form-status" class="text-sm mt-2 font-medium text-center"></div>
                     <div class="flex justify-end gap-2 mt-4">
                         <button type="button" id="closeModal" class="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors duration-200">取消</button>
-                        <button type="submit" class="px-6 py-3 text-sm font-medium text-white bg-macaron-blue rounded-xl shadow-md hover:bg-macaron-purple transition-colors duration-200">提交预约</button>
+                        <button type="submit" id="submitBtn" class="px-6 py-3 text-sm font-medium text-white bg-macaron-blue rounded-xl shadow-md hover:bg-macaron-purple transition-colors duration-200">提交预约</button>
                     </div>
                 </form>
             </div>
@@ -145,27 +146,29 @@
     <!-- Firebase Scripts -->
     <script type="module">
         // Import Firebase functions from CDN
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, setLogLevel } from "https://www.gstatic.com/firebasejs/11.10.1/firebase-firestore.js";
 
         // --- Step 1: 在这里粘贴你的 Firebase 配置信息 ---
         // 将你在 Firebase 控制台复制的整个 'firebaseConfig' 对象粘贴到这里
         const firebaseConfig = {
-  apiKey: "AIzaSyDNAFY76bqtNTc9fuL6FCLQtRGAGJsgOeM",
-  authDomain: "lyl1-4accc.firebaseapp.com",
-  databaseURL: "https://lyl1-4accc-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "lyl1-4accc",
-  storageBucket: "lyl1-4accc.firebasestorage.app",
-  messagingSenderId: "1079227639575",
-  appId: "1:1079227639575:web:fc436fdd0db231759db952",
-  measurementId: "G-LDLBJV7PC7"
-};
+            apiKey: "AIzaSyDNAFY76bqtNTc9fuL6FCLQtRGAGJsgOeM",
+            authDomain: "lyl1-4accc.firebaseapp.com",
+            databaseURL: "https://lyl1-4accc-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "lyl1-4accc",
+            storageBucket: "lyl1-4accc.firebasestorage.app",
+            messagingSenderId: "1079227639575",
+            appId: "1:1079227639575:web:fc436fdd0db231759db952",
+            measurementId: "G-LDLBJV7PC7"
+        };
         // --------------------------------------------------
 
         // --- App State and Firebase Initialization ---
         let db, auth, userId;
         let isFirebaseLoaded = false;
+        const formStatus = document.getElementById('form-status');
+        const submitBtn = document.getElementById('submitBtn');
         try {
             // Check if firebaseConfig is valid before initializing
             if (firebaseConfig.apiKey && firebaseConfig.projectId) {
@@ -333,18 +336,25 @@
 
         function showBookingModal(date) {
             if (!isFirebaseLoaded) {
-                alert("抱歉，Firebase未加载。请将网站部署到服务器以启用预约功能。");
+                 // Using a simple UI message instead of alert for better user experience
+                formStatus.textContent = "抱歉，Firebase未加载。请将网站部署到服务器以启用预约功能。";
+                formStatus.classList.add('text-red-500');
                 return;
             }
             selectedDate = date;
             modalTitle.textContent = `预约 ${date}`;
+            formStatus.textContent = "";
+            formStatus.classList.remove('text-red-500', 'text-green-500', 'text-gray-500');
+
             bookingModal.classList.remove('opacity-0', 'pointer-events-none');
             bookingModal.querySelector('.transform').classList.remove('scale-95');
         }
 
         function showAppointmentDetails(date) {
             if (!isFirebaseLoaded) {
-                 alert("抱歉，Firebase未加载。请将网站部署到服务器以启用预约功能。");
+                 // Using a simple UI message instead of alert for better user experience
+                formStatus.textContent = "抱歉，Firebase未加载。请将网站部署到服务器以启用预约功能。";
+                formStatus.classList.add('text-red-500');
                 return;
             }
             const appointment = appointments[date];
@@ -405,8 +415,14 @@
 
         bookingForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            formStatus.textContent = "正在提交...";
+            formStatus.classList.remove('text-red-500', 'text-green-500');
+            formStatus.classList.add('text-gray-500');
+
             if (!isFirebaseLoaded) {
-                alert("抱歉，Firebase未加载。请将网站部署到服务器以启用预约功能。");
+                formStatus.textContent = "抱歉，Firebase未加载。请将网站部署到服务器以启用预约功能。";
+                formStatus.classList.remove('text-gray-500');
+                formStatus.classList.add('text-red-500');
                 return;
             }
             const formData = new FormData(bookingForm);
@@ -420,7 +436,9 @@
                 if (docSnap.exists() && docSnap.data().status !== 'available') {
                     // This is a safety check in case two people try to book the same date simultaneously
                     console.error("This date has already been booked or is pending. Please refresh and try another date.");
-                    // In a real app, you would show a user-friendly message
+                    formStatus.textContent = "此日期已被预约或正在处理中。";
+                    formStatus.classList.remove('text-gray-500');
+                    formStatus.classList.add('text-red-500');
                     return;
                 }
 
@@ -434,21 +452,31 @@
                     createdAt: new Date().toISOString()
                 });
                 console.log("Appointment submitted for:", selectedDate);
+                formStatus.textContent = "预约成功！请等待确认。";
+                formStatus.classList.remove('text-gray-500', 'text-red-500');
+                formStatus.classList.add('text-green-500');
                 launchConfetti(); // Launch confetti on success!
 
                 // Hide modal and reset form
-                bookingModal.classList.add('opacity-0', 'pointer-events-none');
-                bookingModal.querySelector('.transform').classList.add('scale-95');
-                bookingForm.reset();
+                setTimeout(() => {
+                    bookingModal.classList.add('opacity-0', 'pointer-events-none');
+                    bookingModal.querySelector('.transform').classList.add('scale-95');
+                    bookingForm.reset();
+                    formStatus.textContent = "";
+                }, 2000); // Hide modal after 2 seconds
             } catch (e) {
                 console.error("Error adding document: ", e);
+                formStatus.textContent = "提交失败，请检查你的网络连接和Firebase配置。";
+                formStatus.classList.remove('text-gray-500');
+                formStatus.classList.add('text-red-500');
             }
         });
 
         // Function for photographer to confirm a booking
         async function confirmBooking(date) {
             if (!isFirebaseLoaded) {
-                 alert("抱歉，Firebase未加载。请将网站部署到服务器以启用预约功能。");
+                 // Using a simple UI message instead of alert for better user experience
+                alert("抱歉，Firebase未加载。请将网站部署到服务器以启用预约功能。");
                 return;
             }
             try {
