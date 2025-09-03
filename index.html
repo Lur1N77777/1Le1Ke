@@ -10,12 +10,14 @@
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/utc.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/timezone.js"></script>
+    <!-- 引入 LeanCloud SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4/dist/av-live-query-min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- 引入一个柔和的字体 -->
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Inter:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
     <style>
-        /* 自定义样式和马卡龙配色哈哈哈我是娄乐东 */
+        /* 自定义样式和马卡龙配色 */
         body {
             font-family: 'Inter', 'Noto Sans SC', sans-serif;
             background-color: #fdf6f7; /* 淡粉色背景 */
@@ -95,18 +97,16 @@
             border-radius: 50%;
         }
 
-        /* 新增：更可爱的字体样式 */
         #photographerName {
             font-family: 'ZCOOL KuaiLe', cursive;
-            font-weight: 400; /* 这款字体通常不需要粗体 */
+            font-weight: 400; 
         }
         .brand-font {
             font-family: 'Dancing Script', cursive;
-            font-size: 1.25rem; /* 稍微放大一点以突出风格 */
-            color: #d1c4e9; /* 柔和的紫色，增加可爱感 */
+            font-size: 1.25rem; 
+            color: #d1c4e9; 
         }
 
-        /* 添加一个微妙的背景图案 */
         body::before {
             content: '';
             position: fixed;
@@ -114,7 +114,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f8d5e1' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f8d5e1' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
             z-index: -1;
         }
     </style>
@@ -123,7 +123,6 @@
 
     <div id="app" class="container mx-auto p-4 md:p-8 max-w-4xl">
 
-        <!-- 页眉 -->
         <header class="text-center mb-8 md:mb-12">
             <h1 id="photographerName" class="text-4xl md:text-5xl font-bold text-gray-800 editable">摄影师的名字</h1>
             <p id="introText" class="mt-4 text-lg text-gray-500 max-w-2xl mx-auto editable">
@@ -131,16 +130,13 @@
             </p>
         </header>
         
-        <!-- Admin Controls -->
-        <div id="admin-controls" class="text-center mb-6 hidden space-x-4">
+        <div id="admin-controls" class="text-center mb-6 hidden flex-wrap justify-center gap-4">
              <button id="save-content-btn" class="px-6 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition-all">保存页面文字</button>
              <button id="manage-unavailable-btn" class="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition-all">管理不可预约日期</button>
         </div>
 
-        <!-- 日历和时间表 -->
         <main class="bg-white/80 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-lg">
             <div class="md:grid md:grid-cols-2 md:gap-8">
-                <!-- 日历部分 -->
                 <div>
                     <div class="flex items-center justify-between mb-4">
                         <button id="prev-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
@@ -152,16 +148,13 @@
                         </button>
                     </div>
                     <div id="calendar" class="grid grid-cols-7 gap-1 text-center">
-                        <!-- 日历内容将由JS生成 -->
                     </div>
                 </div>
 
-                <!-- 时间选择部分 -->
                 <div id="time-slots-container" class="mt-8 md:mt-0">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">选择时间段</h3>
                     <p id="selected-date-display" class="text-gray-500 mb-4">请先在左侧选择一个日期</p>
                     <div id="time-slots" class="grid grid-cols-2 gap-3">
-                        <!-- 时间段将由JS生成 -->
                     </div>
                 </div>
             </div>
@@ -172,31 +165,23 @@
             </div>
         </main>
         
-        <!-- 页脚 -->
         <footer class="text-center mt-8 text-gray-400">
             <p class="flex items-center justify-center space-x-2">
-                <span class="brand-font">Powered by LouYile.</span>
+                <span class="brand-font">Powered by Gemini.</span>
                 <a href="#" id="admin-login-btn" class="hover:text-gray-600 text-sm">站长入口</a>
             </p>
         </footer>
     </div>
     
-    <!-- 弹窗 (Modals) -->
-
-    <!-- 配置提示弹窗 -->
+    <!-- Modals -->
     <div id="setup-modal" class="modal">
         <div class="modal-backdrop"></div>
         <div class="modal-content bg-white p-8 rounded-xl shadow-2xl w-full max-w-md text-center">
              <h2 class="text-2xl font-bold text-red-500 mb-4">网站未配置！</h2>
-             <p class="text-gray-600">
-                您需要先在HTML代码中填入您的Firebase项目配置信息，网站才能正常工作。
-                <br><br>
-                请打开 <strong>index.html</strong> 文件，找到 <strong>`// --- 配置区域 START ---`</strong> 部分，然后用您自己的信息替换占位符。
-             </p>
+             <p class="text-gray-600">您需要先在HTML代码中填入您的LeanCloud应用配置信息，网站才能正常工作。<br><br>请打开 <strong>index.html</strong> 文件，找到 <strong>`// --- LeanCloud 配置区域 ---`</strong> 部分，然后用您自己的信息替换占位符。</p>
         </div>
     </div>
 
-    <!-- 管理员密码弹窗 -->
     <div id="admin-modal" class="modal">
         <div class="modal-backdrop"></div>
         <div class="modal-content bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm">
@@ -209,34 +194,20 @@
         </div>
     </div>
     
-    <!-- 客户预约弹窗 (内容不变) -->
     <div id="booking-modal" class="modal">
         <div class="modal-backdrop"></div>
         <div class="modal-content bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
             <h2 class="text-2xl font-bold text-gray-800 mb-2">预约信息</h2>
             <p id="booking-modal-time" class="text-gray-600 mb-6"></p>
             <form id="booking-form">
-                <div class="mb-4">
-                    <label for="client-name" class="block text-sm font-medium text-gray-700 mb-1">您的称呼</label>
-                    <input type="text" id="client-name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-f8d5e1 focus:border-transparent outline-none">
-                </div>
-                <div class="mb-4">
-                    <label for="client-contact" class="block text-sm font-medium text-gray-700 mb-1">联系方式 (微信/电话)</label>
-                    <input type="text" id="client-contact" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-f8d5e1 focus:border-transparent outline-none">
-                </div>
-                <div class="mb-4">
-                    <label for="client-notes" class="block text-sm font-medium text-gray-700 mb-1">备注 (选填)</label>
-                    <textarea id="client-notes" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-f8d5e1 focus:border-transparent outline-none"></textarea>
-                </div>
-                <div class="mt-6 flex justify-end space-x-4">
-                    <button type="button" data-close-modal="booking-modal" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all">取消</button>
-                    <button type="submit" class="px-6 py-2 btn-primary rounded-lg font-semibold shadow-md">提交预约</button>
-                </div>
+                <div class="mb-4"><label for="client-name" class="block text-sm font-medium text-gray-700 mb-1">您的称呼</label><input type="text" id="client-name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-f8d5e1 focus:border-transparent outline-none"></div>
+                <div class="mb-4"><label for="client-contact" class="block text-sm font-medium text-gray-700 mb-1">联系方式 (微信/电话)</label><input type="text" id="client-contact" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-f8d5e1 focus:border-transparent outline-none"></div>
+                <div class="mb-4"><label for="client-notes" class="block text-sm font-medium text-gray-700 mb-1">备注 (选填)</label><textarea id="client-notes" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-f8d5e1 focus:border-transparent outline-none"></textarea></div>
+                <div class="mt-6 flex justify-end space-x-4"><button type="button" data-close-modal="booking-modal" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all">取消</button><button type="submit" class="px-6 py-2 btn-primary rounded-lg font-semibold shadow-md">提交预约</button></div>
             </form>
         </div>
     </div>
 
-    <!-- 管理员操作弹窗 (内容不变) -->
     <div id="admin-action-modal" class="modal">
         <div class="modal-backdrop"></div>
         <div class="modal-content bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
@@ -244,118 +215,87 @@
             <div id="admin-booking-info" class="space-y-2 text-gray-700 mb-6"></div>
             <div class="mt-6 flex justify-between">
                 <button id="delete-booking-btn" class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all font-semibold">删除预约</button>
-                <div class="space-x-4">
-                    <button data-close-modal="admin-action-modal" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all">取消</button>
-                    <button id="confirm-booking-btn" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all font-semibold">确认档期</button>
-                </div>
+                <div class="space-x-4"><button data-close-modal="admin-action-modal" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all">取消</button><button id="confirm-booking-btn" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all font-semibold">确认档期</button></div>
             </div>
         </div>
     </div>
     
-    <!-- 自定义确认弹窗 (内容不变) -->
     <div id="confirm-modal" class="modal">
         <div class="modal-backdrop"></div>
         <div class="modal-content bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm">
             <h2 class="text-xl font-bold text-gray-800 mb-4">请确认</h2>
             <p id="confirm-modal-message" class="text-gray-600 mb-6"></p>
-            <div class="mt-6 flex justify-end space-x-4">
-                <button id="confirm-modal-cancel" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all">取消</button>
-                <button id="confirm-modal-confirm" class="px-6 py-2 bg-red-500 text-white rounded-lg font-semibold shadow-md">确认</button>
-            </div>
+            <div class="mt-6 flex justify-end space-x-4"><button id="confirm-modal-cancel" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all">取消</button><button id="confirm-modal-confirm" class="px-6 py-2 bg-red-500 text-white rounded-lg font-semibold shadow-md">确认</button></div>
         </div>
     </div>
 
-    <!-- 不可预约日期管理弹窗 (新增) -->
     <div id="unavailable-dates-modal" class="modal">
         <div class="modal-backdrop"></div>
         <div class="modal-content bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">选择不可预约日期</h2>
             <p class="text-sm text-gray-500 mb-4">点击日期进行选择或取消。您可以跨月份选择。</p>
              <div>
-                <div class="flex items-center justify-between mb-4">
-                    <button id="unavailable-prev-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    </button>
-                    <h2 id="unavailable-month-year" class="text-xl font-semibold text-gray-800"></h2>
-                    <button id="unavailable-next-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
-                </div>
-                <div id="unavailable-calendar" class="grid grid-cols-7 gap-1 text-center">
-                    <!-- Calendar will be generated here -->
-                </div>
+                <div class="flex items-center justify-between mb-4"><button id="unavailable-prev-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors"><svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button><h2 id="unavailable-month-year" class="text-xl font-semibold text-gray-800"></h2><button id="unavailable-next-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors"><svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button></div>
+                <div id="unavailable-calendar" class="grid grid-cols-7 gap-1 text-center"></div>
             </div>
-            <div class="mt-6 flex justify-end space-x-4">
-                <button data-close-modal="unavailable-dates-modal" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all">取消</button>
-                <button id="save-unavailable-dates" class="px-6 py-2 bg-blue-500 text-white rounded-lg font-semibold shadow-md">保存设置</button>
-            </div>
+            <div class="mt-6 flex justify-end space-x-4"><button data-close-modal="unavailable-dates-modal" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all">取消</button><button id="save-unavailable-dates" class="px-6 py-2 bg-blue-500 text-white rounded-lg font-semibold shadow-md">保存设置</button></div>
         </div>
     </div>
 
-    <!-- 提示消息 -->
+    <div id="cancellation-modal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">我的预约</h2>
+            <p class="text-gray-600 mb-6">您已预约此时间段。如果您想取消，请点击下面的按钮。</p>
+            <div id="cancellation-booking-info" class="space-y-2 text-gray-700 mb-6 bg-gray-50 p-4 rounded-lg"></div>
+            <div class="mt-6 flex justify-end space-x-4"><button data-close-modal="cancellation-modal" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all">保留预约</button><button id="cancel-booking-btn" class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all font-semibold">确认取消</button></div>
+        </div>
+    </div>
+
     <div id="toast" class="fixed bottom-10 right-10 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl translate-x-[150%] transition-transform duration-500">
         <p id="toast-message"></p>
     </div>
 
-    <!-- Firebase SDK -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, onSnapshot, addDoc, setDoc, getDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        
         dayjs.extend(window.dayjs_plugin_utc);
         dayjs.extend(window.dayjs_plugin_timezone);
 
-        // --- 配置区域 START ---
+        // --- LeanCloud 配置区域 ---
+        const LEANCLOUD_APP_ID = "fnI1W7pmpDuCu006VVyC8jxe-gzGzoHsz";
+        const LEANCLOUD_APP_KEY = "FNZjeEMp0nrh9JYA9jo1tUto";
+        const LEANCLOUD_SERVER_URL = "https://fni1w7pm.lc-cn-n1-shared.com";
         
-        const firebaseConfig = {
-            apiKey: "AIzaSyDNAFY76bqtNTc9fuL6FCLQtRGAGJsgOeM",
-            authDomain: "lyl1-4accc.firebaseapp.com",
-            projectId: "lyl1-4accc",
-            storageBucket: "lyl1-4accc.appspot.com",
-            messagingSenderId: "1079227639575",
-            appId: "1:1079227639575:web:fc436fdd0db231759db952"
-        };
-
-        // 设置您的站长密码
         const ADMIN_PASSWORD = "0624";
-
-        // 设置您的可用时间段
-        const AVAILABLE_TIMES = [
-            "09:00 - 11:00",
-            "13:00 - 15:00",
-            "16:00 - 18:00",
-        ];
+        const AVAILABLE_TIMES = [ "09:00 - 11:00", "13:00 - 15:00", "16:00 - 18:00" ];
         
-        // --- 配置区域 END ---
-        
-        // 全局变量
         let currentMonth = dayjs();
         let selectedDate = null;
         let bookings = [];
         let isAdmin = false;
-        let siteContent = {};
+        let siteContent = null; 
         let unavailableDates = [];
-        // For multi-select calendar
         let unavailableCalendarMonth = dayjs();
         let tempUnavailableDates = [];
         
-        // 初始化 Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        try {
+            AV.init({
+                appId: LEANCLOUD_APP_ID,
+                appKey: LEANCLOUD_APP_KEY,
+                serverURL: LEANCLOUD_SERVER_URL,
+            });
+        } catch(e) {
+            console.error("LeanCloud initialization failed:", e);
+        }
+
+        if (LEANCLOUD_APP_ID.includes("YOUR_APP_ID")) {
+            openModal('setup-modal');
+        }
         
-        signInAnonymously(auth).catch((error) => console.error("Anonymous sign-in failed:", error));
-        
-        // --- DOM 元素 ---
         const calendarEl = document.getElementById('calendar');
         const currentMonthYearEl = document.getElementById('current-month-year');
-        const prevMonthBtn = document.getElementById('prev-month');
-        const nextMonthBtn = document.getElementById('next-month');
         const timeSlotsContainer = document.getElementById('time-slots');
         const selectedDateDisplay = document.getElementById('selected-date-display');
 
-        // --- 核心函数 (showToast 不变) ---
         function showToast(message) {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toast-message');
@@ -366,7 +306,6 @@
             }, 3000);
         }
 
-        // 渲染主日历
         function renderCalendar() {
             calendarEl.innerHTML = '';
             currentMonthYearEl.textContent = currentMonth.format('YYYY年 MMMM');
@@ -389,11 +328,10 @@
                 dayEl.className = 'calendar-day p-2 cursor-pointer rounded-full transition-colors hover:bg-gray-200';
                 dayEl.dataset.date = dateStr;
 
-                // 最高优先级：检查是否为不可预约日期
                 if (unavailableDates.includes(dateStr)) {
                     dayEl.classList.add('unavailable');
                     calendarEl.appendChild(dayEl);
-                    continue; // 跳过此日期的后续逻辑
+                    continue; 
                 }
 
                 if (date.isSame(dayjs(), 'day')) { dayEl.classList.add('today'); }
@@ -411,12 +349,13 @@
                 
                 const dayBookings = bookings.filter(b => b.date === dateStr);
                 if (dayBookings.length > 0) {
-                   const isFullyBooked = dayBookings.filter(b => b.status === 'confirmed').length >= AVAILABLE_TIMES.length;
-                   const isPending = dayBookings.some(b => b.status === 'pending');
+                   const isFullyBooked = dayBookings.length >= AVAILABLE_TIMES.length;
+                   const hasConfirmed = dayBookings.some(b => b.status === 'confirmed');
+                   const hasPending = dayBookings.some(b => b.status === 'pending');
                    
-                   if(isFullyBooked || dayBookings.some(b => b.status === 'confirmed')) {
+                   if(isFullyBooked || hasConfirmed) {
                        dayEl.classList.add('macaron-pink', 'text-white', 'font-bold');
-                   } else if(isPending) {
+                   } else if(hasPending) {
                        dayEl.classList.add('macaron-yellow');
                    }
                 }
@@ -425,7 +364,6 @@
             }
         }
         
-        // renderTimeSlots, handleTimeSlotClick 函数不变
         function renderTimeSlots() {
             if (!selectedDate || unavailableDates.includes(selectedDate)) {
                 selectedDateDisplay.textContent = unavailableDates.includes(selectedDate) ? '此日期不可预约' : '请先在左侧选择一个日期';
@@ -453,7 +391,7 @@
                         timeSlotEl.classList.add('status-confirmed');
                         timeSlotEl.textContent = `${time} (已预约)`;
                     }
-                    timeSlotEl.disabled = !isAdmin;
+                    timeSlotEl.disabled = !isAdmin && booking.status === 'confirmed';
                 }
                 
                 timeSlotEl.addEventListener('click', () => handleTimeSlotClick(time, booking));
@@ -466,57 +404,85 @@
                 if (booking) { openAdminActionModal(booking); } 
                 else { showToast('该时间段无预约'); }
             } else {
-                if (!booking) { openBookingModal(selectedDate, time); }
+                if (!booking) { 
+                    openBookingModal(selectedDate, time); 
+                } else if (booking.status === 'pending') {
+                    const ownerIds = JSON.parse(localStorage.getItem('myBookingIds') || '[]');
+                    if (ownerIds.includes(booking.ownerId)) {
+                        openCancellationModal(booking);
+                    } else {
+                        showToast('此时间段正在等待确认');
+                    }
+                }
             }
         }
 
-        // --- 弹窗管理 (大部分不变) ---
         function openModal(modalId) { document.getElementById(modalId).classList.add('flex'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('flex'); }
-        function openAdminModal() { openModal('admin-modal'); }
+        
         function openBookingModal(date, time) {
             document.getElementById('booking-modal-time').textContent = `预约: ${date} ${time}`;
             document.getElementById('booking-form').dataset.date = date;
             document.getElementById('booking-form').dataset.time = time;
             openModal('booking-modal');
         }
+        
         function openAdminActionModal(booking) {
              const infoEl = document.getElementById('admin-booking-info');
-             infoEl.innerHTML = `
-                <p><strong>日期:</strong> ${booking.date}</p><p><strong>时间:</strong> ${booking.time}</p>
-                <p><strong>客户:</strong> ${booking.clientName}</p><p><strong>联系方式:</strong> ${booking.clientContact}</p>
-                <p><strong>备注:</strong> ${booking.notes || '无'}</p>
-                <p><strong>状态:</strong> <span class="px-2 py-1 rounded-full text-sm ${booking.status === 'pending' ? 'macaron-yellow' : 'macaron-pink'}">${booking.status === 'pending' ? '待确认' : '已确认'}</span></p>
-            `;
+             infoEl.innerHTML = `<p><strong>日期:</strong> ${booking.date}</p><p><strong>时间:</strong> ${booking.time}</p><p><strong>客户:</strong> ${booking.clientName}</p><p><strong>联系方式:</strong> ${booking.clientContact}</p><p><strong>备注:</strong> ${booking.notes || '无'}</p><p><strong>状态:</strong> <span class="px-2 py-1 rounded-full text-sm ${booking.status === 'pending' ? 'macaron-yellow' : 'macaron-pink'}">${booking.status === 'pending' ? '待确认' : '已确认'}</span></p>`;
             document.getElementById('confirm-booking-btn').style.display = booking.status === 'pending' ? 'inline-block' : 'none';
             document.getElementById('confirm-booking-btn').onclick = () => confirmBooking(booking.id);
             document.getElementById('delete-booking-btn').onclick = () => deleteBooking(booking.id);
             openModal('admin-action-modal');
         }
+        
+        function openCancellationModal(booking) {
+             const infoEl = document.getElementById('cancellation-booking-info');
+             infoEl.innerHTML = `<p><strong>日期:</strong> ${booking.date}</p><p><strong>时间:</strong> ${booking.time}</p><p><strong>您的称呼:</strong> ${booking.clientName}</p>`;
+            document.getElementById('cancel-booking-btn').onclick = () => {
+                 closeModal('cancellation-modal');
+                 showConfirm('您确定要取消这个预约吗？', () => {
+                    clientDeleteBooking(booking);
+                 });
+            };
+            openModal('cancellation-modal');
+        }
 
-        // --- 数据操作 (大部分不变) ---
         async function submitBooking(event) {
             event.preventDefault();
             const form = event.target;
-            const newBooking = {
-                date: form.dataset.date, time: form.dataset.time,
-                clientName: document.getElementById('client-name').value.trim(),
-                clientContact: document.getElementById('client-contact').value.trim(),
-                notes: document.getElementById('client-notes').value.trim(), status: 'pending'
-            };
+            const ownerId = crypto.randomUUID(); 
+            
+            const Booking = AV.Object.extend('Booking');
+            const newBooking = new Booking();
+            newBooking.set('date', form.dataset.date);
+            newBooking.set('time', form.dataset.time);
+            newBooking.set('clientName', document.getElementById('client-name').value.trim());
+            newBooking.set('clientContact', document.getElementById('client-contact').value.trim());
+            newBooking.set('notes', document.getElementById('client-notes').value.trim());
+            newBooking.set('status', 'pending');
+            newBooking.set('ownerId', ownerId);
+
             try {
-                await addDoc(collection(db, 'bookings'), newBooking);
+                await newBooking.save();
+                let ownerIds = JSON.parse(localStorage.getItem('myBookingIds') || '[]');
+                ownerIds.push(ownerId);
+                localStorage.setItem('myBookingIds', JSON.stringify(ownerIds));
                 showToast('预约请求已发送！');
                 form.reset(); closeModal('booking-modal');
-            } catch (e) { console.error("Error adding document: ", e); showToast('抱歉，出错了，请稍后再试。'); }
+            } catch (error) { console.error("Error adding document: ", error); showToast('抱歉，出错了，请稍后再试。'); }
         }
+
         async function confirmBooking(bookingId) {
             try {
-                await updateDoc(doc(db, 'bookings', bookingId), { status: 'confirmed' });
+                const bookingToUpdate = AV.Object.createWithoutData('Booking', bookingId);
+                bookingToUpdate.set('status', 'confirmed');
+                await bookingToUpdate.save();
                 showToast('档期已确认！'); closeModal('admin-action-modal');
-            } catch (e) { console.error("Error updating document: ", e); showToast('确认失败，请重试。'); }
+            } catch (error) { console.error("Error updating document: ", error); showToast('确认失败，请重试。'); }
         }
-        function showConfirm(message, onConfirm) { /* 不变 */ 
+
+        function showConfirm(message, onConfirm) {
             const confirmModal = document.getElementById('confirm-modal');
             const messageEl = document.getElementById('confirm-modal-message');
             const confirmBtn = document.getElementById('confirm-modal-confirm');
@@ -528,32 +494,48 @@
                 confirmBtn.removeEventListener('click', confirmHandler);
                 cancelBtn.removeEventListener('click', cancelHandler);
             }
-            confirmBtn.addEventListener('click', confirmHandler);
-            cancelBtn.addEventListener('click', cancelHandler);
+            confirmBtn.addEventListener('click', confirmHandler, { once: true });
+            cancelBtn.addEventListener('click', cancelHandler, { once: true });
             openModal('confirm-modal');
         }
+
         function deleteBooking(bookingId) {
             showConfirm('确定要删除此预约吗？此操作无法撤销。', async () => {
                 try {
-                    await deleteDoc(doc(db, 'bookings', bookingId));
+                    const bookingToDelete = AV.Object.createWithoutData('Booking', bookingId);
+                    await bookingToDelete.destroy();
                     showToast('预约已删除。'); closeModal('admin-action-modal');
-                } catch (e) { console.error("Error deleting document: ", e); showToast('删除失败，请重试。'); }
+                } catch (error) { console.error("Error deleting document: ", error); showToast('删除失败，请重试。'); }
             });
         }
-        async function saveSiteContent() { /* 不变 */
-            const newContent = {
-                photographerName: document.getElementById('photographerName').textContent,
-                introText: document.getElementById('introText').textContent,
-                unavailableDates: unavailableDates // 保存时也把不可预约日期一并保存
-            };
+        
+        async function clientDeleteBooking(booking) {
             try {
-                await setDoc(doc(db, 'siteContent', 'main'), newContent, { merge: true });
+                const bookingToDelete = AV.Object.createWithoutData('Booking', booking.id);
+                await bookingToDelete.destroy();
+                let ownerIds = JSON.parse(localStorage.getItem('myBookingIds') || '[]');
+                ownerIds = ownerIds.filter(id => id !== booking.ownerId);
+                localStorage.setItem('myBookingIds', JSON.stringify(ownerIds));
+                showToast('预约已成功取消。');
+            } catch (error) { console.error("Error deleting document: ", error); showToast('取消失败，请重试。'); }
+        }
+        
+        async function saveSiteContent() {
+            if (!siteContent) {
+                const SiteContent = AV.Object.extend('SiteContent');
+                siteContent = new SiteContent();
+            }
+            siteContent.set('photographerName', document.getElementById('photographerName').textContent);
+            siteContent.set('introText', document.getElementById('introText').textContent);
+            
+            try {
+                await siteContent.save();
                 showToast('页面内容已保存！'); toggleEditable(false);
-            } catch (e) { console.error("Error saving site content: ", e); showToast('保存失败，请重试。'); }
+            } catch (error) { console.error("Error saving site content: ", error); showToast('保存失败，请重试。'); }
         }
 
-        // --- 管理员模式 (大部分不变) ---
         function checkAdminLogin() { if (sessionStorage.getItem('isAdmin') === 'true') { isAdmin = true; enableAdminMode(); } }
+        
         function handleAdminLogin() {
             const password = document.getElementById('admin-password').value;
             if (password === ADMIN_PASSWORD) {
@@ -563,16 +545,17 @@
                 showToast('欢迎回来，站长！');
             } else { showToast('密码错误！'); }
         }
+
         function enableAdminMode() {
             document.body.classList.add('admin-mode');
-            document.getElementById('admin-controls').style.display = 'block';
+            document.getElementById('admin-controls').style.display = 'flex';
             toggleEditable(true); renderTimeSlots();
         }
+
         function toggleEditable(isEditable) { document.querySelectorAll('.editable').forEach(el => { el.contentEditable = isEditable; }); }
         
-        // --- 新增: 不可预约日期功能 ---
         function openUnavailableDatesModal() {
-            tempUnavailableDates = [...unavailableDates]; // 复制当前设置，以便取消操作
+            tempUnavailableDates = [...unavailableDates]; 
             unavailableCalendarMonth = dayjs();
             renderUnavailableCalendar();
             openModal('unavailable-dates-modal');
@@ -618,73 +601,99 @@
         }
         
         async function saveUnavailableDates() {
+            if (!siteContent) {
+                const SiteContent = AV.Object.extend('SiteContent');
+                siteContent = new SiteContent();
+            }
+            siteContent.set('unavailableDates', tempUnavailableDates);
             try {
-                // 使用 merge: true 来更新文档，而不是覆盖
-                await setDoc(doc(db, 'siteContent', 'main'), { unavailableDates: tempUnavailableDates }, { merge: true });
+                await siteContent.save();
                 showToast('不可预约日期已更新！');
                 closeModal('unavailable-dates-modal');
-                // 无需手动更新全局变量，onSnapshot会自动处理
-            } catch (e) {
-                console.error("Error saving unavailable dates: ", e);
-                showToast('保存失败，请重试。');
-            }
+            } catch (error) { console.error("Error saving unavailable dates: ", error); showToast('保存失败，请重试。'); }
         }
 
         function updateUIWithSiteContent(content) {
-            siteContent = content;
-            document.getElementById('photographerName').textContent = content.photographerName || '摄影师的名字';
-            document.getElementById('introText').textContent = content.introText || '欢迎来到我的预约页面！在这里您可以查看我的档期并选择您心仪的拍摄时间。期待与您一同创作美好的回忆。';
-            // 更新不可预约日期
-            unavailableDates = content.unavailableDates || [];
-            renderCalendar(); // 在获取到新数据后重新渲染主日历
+            siteContent = content; // Store the object
+            const data = content.attributes;
+            document.getElementById('photographerName').textContent = data.photographerName || '摄影师的名字';
+            document.getElementById('introText').textContent = data.introText || '欢迎来到我的预约页面！在这里您可以查看我的档期并选择您心仪的拍摄时间。期待与您一同创作美好的回忆。';
+            unavailableDates = data.unavailableDates || [];
+            renderCalendar(); 
+            if(selectedDate) renderTimeSlots();
         }
 
-        // --- 事件监听 (部分更新) ---
-        prevMonthBtn.addEventListener('click', () => { currentMonth = currentMonth.subtract(1, 'month'); renderCalendar(); });
-        nextMonthBtn.addEventListener('click', () => { currentMonth = currentMonth.add(1, 'month'); renderCalendar(); });
-        document.getElementById('admin-login-btn').addEventListener('click', (e) => { e.preventDefault(); openAdminModal(); });
-        document.getElementById('submit-admin-login').addEventListener('click', handleAdminLogin);
-        document.getElementById('admin-password').addEventListener('keyup', (e) => { if (e.key === 'Enter') handleAdminLogin(); });
-        document.getElementById('booking-form').addEventListener('submit', submitBooking);
-        document.getElementById('save-content-btn').addEventListener('click', saveSiteContent);
-        
-        // 新增监听
-        document.getElementById('manage-unavailable-btn').addEventListener('click', openUnavailableDatesModal);
-        document.getElementById('unavailable-prev-month').addEventListener('click', () => { unavailableCalendarMonth = unavailableCalendarMonth.subtract(1, 'month'); renderUnavailableCalendar(); });
-        document.getElementById('unavailable-next-month').addEventListener('click', () => { unavailableCalendarMonth = unavailableCalendarMonth.add(1, 'month'); renderUnavailableCalendar(); });
-        document.getElementById('save-unavailable-dates').addEventListener('click', saveUnavailableDates);
-
-        document.querySelectorAll('[data-close-modal]').forEach(el => { el.addEventListener('click', () => closeModal(el.dataset.closeModal)); });
-        document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
-            const modal = backdrop.parentElement;
-            if (modal.id !== 'setup-modal') {
-                 modal.addEventListener('click', (e) => { if (e.target === modal) { closeModal(modal.id); } });
+        function processBookingUpdate(bookingObject) {
+            const bookingData = { id: bookingObject.id, ...bookingObject.attributes };
+            const index = bookings.findIndex(b => b.id === bookingData.id);
+            if (index > -1) {
+                bookings[index] = bookingData;
+            } else {
+                bookings.push(bookingData);
             }
-        });
+        }
+        
+        // --- LeanCloud Real-time Initialization ---
+        async function initializeData() {
+            try {
+                await AV.User.loginAnonymously();
 
-        // --- 初始化 & 实时更新 ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                onSnapshot(collection(db, "bookings"), (snapshot) => {
-                    bookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const bookingQuery = new AV.Query('Booking');
+                const initialBookings = await bookingQuery.find();
+                bookings = initialBookings.map(b => ({ id: b.id, ...b.attributes }));
+
+                const contentQuery = new AV.Query('SiteContent');
+                const initialContent = await contentQuery.first();
+                if (initialContent) {
+                    updateUIWithSiteContent(initialContent);
+                } else {
+                    updateUIWithSiteContent({ attributes: {} });
+                }
+                
+                renderCalendar();
+                checkAdminLogin();
+
+                const bookingLiveQuery = await bookingQuery.subscribe();
+                bookingLiveQuery.on('create', (booking) => { processBookingUpdate(booking); renderCalendar(); if(selectedDate) renderTimeSlots(); });
+                bookingLiveQuery.on('update', (booking) => { processBookingUpdate(booking); renderCalendar(); if(selectedDate) renderTimeSlots(); });
+                bookingLiveQuery.on('delete', (booking) => {
+                    bookings = bookings.filter(b => b.id !== booking.id);
                     renderCalendar();
                     if(selectedDate) renderTimeSlots();
                 });
                 
-                onSnapshot(doc(db, "siteContent", "main"), (doc) => {
-                    if (doc.exists()) { 
-                        updateUIWithSiteContent(doc.data()); 
-                    }
-                });
+                const contentLiveQuery = await contentQuery.subscribe();
+                contentLiveQuery.on('update', (content) => { updateUIWithSiteContent(content); });
+                contentLiveQuery.on('create', (content) => { updateUIWithSiteContent(content); });
+
+            } catch (error) {
+                console.error("Data initialization failed: ", error);
+                showToast("无法加载数据，请刷新页面");
+            }
+        }
+
+        document.getElementById('prev-month').addEventListener('click', () => { currentMonth = currentMonth.subtract(1, 'month'); renderCalendar(); });
+        document.getElementById('next-month').addEventListener('click', () => { currentMonth = currentMonth.add(1, 'month'); renderCalendar(); });
+        document.getElementById('admin-login-btn').addEventListener('click', (e) => { e.preventDefault(); openModal('admin-modal'); });
+        document.getElementById('submit-admin-login').addEventListener('click', handleAdminLogin);
+        document.getElementById('admin-password').addEventListener('keyup', (e) => { if (e.key === 'Enter') handleAdminLogin(); });
+        document.getElementById('booking-form').addEventListener('submit', submitBooking);
+        document.getElementById('save-content-btn').addEventListener('click', saveSiteContent);
+        document.getElementById('manage-unavailable-btn').addEventListener('click', openUnavailableDatesModal);
+        document.getElementById('unavailable-prev-month').addEventListener('click', () => { unavailableCalendarMonth = unavailableCalendarMonth.subtract(1, 'month'); renderUnavailableCalendar(); });
+        document.getElementById('unavailable-next-month').addEventListener('click', () => { unavailableCalendarMonth = unavailableCalendarMonth.add(1, 'month'); renderUnavailableCalendar(); });
+        document.getElementById('save-unavailable-dates').addEventListener('click', saveUnavailableDates);
+        document.querySelectorAll('[data-close-modal]').forEach(el => { el.addEventListener('click', () => closeModal(el.dataset.closeModal)); });
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+            const modal = backdrop.parentElement;
+            if (modal.id !== 'setup-modal') {
+                 modal.addEventListener('click', (e) => { if (e.target === backdrop.parentElement) { closeModal(modal.id); } });
             }
         });
-        
-        checkAdminLogin();
-        renderCalendar();
+
+        initializeData();
+
     </script>
 </body>
 </html>
-
-
-
 
