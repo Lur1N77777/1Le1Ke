@@ -144,14 +144,11 @@
     <canvas id="confetti-canvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-50"></canvas>
 
     <!-- Firebase Scripts -->
-    <script type="module">
-        // Import Firebase functions from CDN
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, setLogLevel } from "https://www.gstatic.com/firebasejs/11.10.1/firebase-firestore.js";
-
+    <script src="https://www.gstatic.com/firebasejs/11.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.10.1/firebase-firestore.js"></script>
+    <script>
         // --- Step 1: 在这里粘贴你的 Firebase 配置信息 ---
-        // 将你在 Firebase 控制台复制的整个 'firebaseConfig' 对象粘贴到这里
         const firebaseConfig = {
             apiKey: "AIzaSyDNAFY76bqtNTc9fuL6FCLQtRGAGJsgOeM",
             authDomain: "lyl1-4accc.firebaseapp.com",
@@ -172,10 +169,10 @@
         try {
             // Check if firebaseConfig is valid before initializing
             if (firebaseConfig.apiKey && firebaseConfig.projectId) {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                setLogLevel('debug');
+                const app = firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth(app);
+                db = firebase.firestore(app);
+                db.setLogLevel('debug');
                 isFirebaseLoaded = true;
             } else {
                 console.error("Firebase config is incomplete. Please check your config. Displaying static calendar.");
@@ -248,17 +245,17 @@
 
         // --- Firebase Authentication and Data Sync ---
         if (isFirebaseLoaded) {
-            onAuthStateChanged(auth, async (user) => {
+            auth.onAuthStateChanged(async (user) => {
                 if (user) {
                     userId = user.uid;
                     userIdDisplay.querySelector('#userId').textContent = userId;
                     userIdDisplay.classList.remove('hidden');
 
                     // Define the public collection path for appointments
-                    const appointmentsRef = collection(db, `appointments`);
+                    const appointmentsRef = db.collection(`appointments`);
                     
                     // Set up real-time listener for appointments
-                    onSnapshot(appointmentsRef, (snapshot) => {
+                    appointmentsRef.onSnapshot((snapshot) => {
                         snapshot.docChanges().forEach((change) => {
                             const data = change.doc.data();
                             appointments[data.date] = data;
@@ -271,7 +268,7 @@
             });
 
             // Sign in anonymously on page load
-            signInAnonymously(auth);
+            auth.signInAnonymously();
         } else {
              // If Firebase is not loaded, just render the static calendar
              renderCalendar(currentDate);
@@ -371,7 +368,7 @@
             modalTitle.textContent = `预约详情 - ${date}`;
             bookingModal.querySelector('#modalContent').innerHTML = content;
             bookingModal.classList.remove('opacity-0', 'pointer-events-none');
-            bookingModal.querySelector('.transform').classList.remove('scale-95');
+            bookingModal.querySelector('.transform').classList.add('scale-95');
 
             // If the user is the photographer (or just signed in), show a confirmation button for pending bookings
             if (appointment.status === 'pending' && userId) {
@@ -430,8 +427,8 @@
 
             try {
                 // Check if the appointment already exists for the selected date
-                const docRef = doc(db, `appointments`, selectedDate);
-                const docSnap = await getDoc(docRef);
+                const docRef = db.doc(`appointments/${selectedDate}`);
+                const docSnap = await docRef.get();
 
                 if (docSnap.exists() && docSnap.data().status !== 'available') {
                     // This is a safety check in case two people try to book the same date simultaneously
@@ -443,7 +440,7 @@
                 }
 
                 // Create a new appointment document
-                await setDoc(docRef, {
+                await docRef.set({
                     date: selectedDate,
                     name: bookingData.name,
                     contact: bookingData.contact,
@@ -480,8 +477,8 @@
                 return;
             }
             try {
-                const docRef = doc(db, `appointments`, date);
-                await setDoc(docRef, { status: 'booked' }, { merge: true });
+                const docRef = db.doc(`appointments/${date}`);
+                await docRef.set({ status: 'booked' }, { merge: true });
                 console.log("Appointment confirmed for:", date);
                 // Hide modal after confirmation
                 bookingModal.classList.add('opacity-0', 'pointer-events-none');
