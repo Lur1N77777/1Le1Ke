@@ -133,6 +133,7 @@
         <div id="admin-controls" class="text-center mb-6 hidden flex-wrap justify-center gap-4">
              <button id="save-content-btn" class="px-6 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition-all">保存页面文字</button>
              <button id="manage-unavailable-btn" class="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition-all">管理不可预约日期</button>
+             <button id="admin-logout-btn" class="px-6 py-2 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 transition-all">退出站长模式</button>
         </div>
 
         <main class="bg-white/80 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-lg">
@@ -167,7 +168,7 @@
         
         <footer class="text-center mt-8 text-gray-400">
             <p class="flex items-center justify-center space-x-2">
-                <span class="brand-font">Powered by LouYile.</span>
+                <span class="brand-font">Powered by Gemini.</span>
                 <a href="#" id="admin-login-btn" class="hover:text-gray-600 text-sm">站长入口</a>
             </p>
         </footer>
@@ -276,20 +277,6 @@
         let unavailableDates = [];
         let unavailableCalendarMonth = dayjs();
         let tempUnavailableDates = [];
-        
-        try {
-            AV.init({
-                appId: LEANCLOUD_APP_ID,
-                appKey: LEANCLOUD_APP_KEY,
-                serverURL: LEANCLOUD_SERVER_URL,
-            });
-        } catch(e) {
-            console.error("LeanCloud initialization failed:", e);
-        }
-
-        if (LEANCLOUD_APP_ID.includes("YOUR_APP_ID")) {
-            openModal('setup-modal');
-        }
         
         const calendarEl = document.getElementById('calendar');
         const currentMonthYearEl = document.getElementById('current-month-year');
@@ -521,36 +508,72 @@
         }
         
         async function saveSiteContent() {
-            if (!siteContent) {
+            const currentUser = AV.User.current();
+            if (!currentUser || !isAdmin) {
+                showToast('需要管理员权限才能保存！');
+                return;
+            }
+            if (!siteContent || typeof siteContent.set !== 'function') {
                 const SiteContent = AV.Object.extend('SiteContent');
                 siteContent = new SiteContent();
+                const acl = new AV.ACL();
+                acl.setPublicReadAccess(true);
+                acl.setWriteAccess(currentUser, true);
+                siteContent.setACL(acl);
             }
             siteContent.set('photographerName', document.getElementById('photographerName').textContent);
             siteContent.set('introText', document.getElementById('introText').textContent);
             
             try {
                 await siteContent.save();
-                showToast('页面内容已保存！'); toggleEditable(false);
+                showToast('页面内容已保存！'); 
+                toggleEditable(false);
             } catch (error) { console.error("Error saving site content: ", error); showToast('保存失败，请重试。'); }
         }
-
-        function checkAdminLogin() { if (sessionStorage.getItem('isAdmin') === 'true') { isAdmin = true; enableAdminMode(); } }
         
-        function handleAdminLogin() {
+        async function handleAdminLogin() {
             const password = document.getElementById('admin-password').value;
-            if (password === ADMIN_PASSWORD) {
-                isAdmin = true; sessionStorage.setItem('isAdmin', 'true');
-                enableAdminMode(); closeModal('admin-modal');
+            const username = 'admin'; // Hardcoded admin username
+
+            try {
+                if (AV.User.current()) { await AV.User.logOut(); }
+                const adminUser = await AV.User.logIn(username, password);
+                isAdmin = true;
+                sessionStorage.setItem('isAdmin', 'true');
+                sessionStorage.setItem('adminToken', adminUser.getSessionToken());
+                
+                enableAdminMode();
+                closeModal('admin-modal');
                 document.getElementById('admin-password').value = '';
                 showToast('欢迎回来，站长！');
-            } else { showToast('密码错误！'); }
+            } catch (error) {
+                showToast('登录失败！请检查密码或确保管理员账户存在。');
+                console.error('Admin login failed:', error);
+                await AV.User.loginAnonymously();
+            }
         }
 
         function enableAdminMode() {
             document.body.classList.add('admin-mode');
             document.getElementById('admin-controls').style.display = 'flex';
-            toggleEditable(true); renderTimeSlots();
+            toggleEditable(true); 
+            if(selectedDate) renderTimeSlots();
         }
+        
+        async function handleAdminLogout() {
+            await AV.User.logOut();
+            sessionStorage.removeItem('isAdmin');
+            sessionStorage.removeItem('adminToken');
+            isAdmin = false;
+            document.body.classList.remove('admin-mode');
+            document.getElementById('admin-controls').style.display = 'none';
+            toggleEditable(false);
+            showToast('已退出站长模式。');
+            await AV.User.loginAnonymously();
+            renderCalendar();
+            if (selectedDate) renderTimeSlots();
+        }
+
 
         function toggleEditable(isEditable) { document.querySelectorAll('.editable').forEach(el => { el.contentEditable = isEditable; }); }
         
@@ -601,9 +624,18 @@
         }
         
         async function saveUnavailableDates() {
-            if (!siteContent) {
+            const currentUser = AV.User.current();
+            if (!currentUser || !isAdmin) {
+                showToast('需要管理员权限才能保存！');
+                return;
+            }
+            if (!siteContent || typeof siteContent.set !== 'function') {
                 const SiteContent = AV.Object.extend('SiteContent');
                 siteContent = new SiteContent();
+                const acl = new AV.ACL();
+                acl.setPublicReadAccess(true);
+                acl.setWriteAccess(currentUser, true);
+                siteContent.setACL(acl);
             }
             siteContent.set('unavailableDates', tempUnavailableDates);
             try {
@@ -633,11 +665,8 @@
             }
         }
         
-        // --- LeanCloud Real-time Initialization ---
-        async function initializeData() {
+        async function loadDataAndSubscribe() {
             try {
-                await AV.User.loginAnonymously();
-
                 const bookingQuery = new AV.Query('Booking');
                 const initialBookings = await bookingQuery.find();
                 bookings = initialBookings.map(b => ({ id: b.id, ...b.attributes }));
@@ -650,9 +679,6 @@
                     updateUIWithSiteContent({ attributes: {} });
                 }
                 
-                renderCalendar();
-                checkAdminLogin();
-
                 const bookingLiveQuery = await bookingQuery.subscribe();
                 bookingLiveQuery.on('create', (booking) => { processBookingUpdate(booking); renderCalendar(); if(selectedDate) renderTimeSlots(); });
                 bookingLiveQuery.on('update', (booking) => { processBookingUpdate(booking); renderCalendar(); if(selectedDate) renderTimeSlots(); });
@@ -667,9 +693,47 @@
                 contentLiveQuery.on('create', (content) => { updateUIWithSiteContent(content); });
 
             } catch (error) {
-                console.error("Data initialization failed: ", error);
-                showToast("无法加载数据，请刷新页面");
+                console.error("Data subscription failed: ", error);
+                showToast("无法加载实时数据，请刷新页面");
             }
+        }
+
+        async function main() {
+            try {
+                AV.init({
+                    appId: LEANCLOUD_APP_ID,
+                    appKey: LEANCLOUD_APP_KEY,
+                    serverURL: LEANCLOUD_SERVER_URL,
+                });
+            } catch(e) { console.error("LeanCloud initialization failed:", e); }
+
+            const adminToken = sessionStorage.getItem('adminToken');
+            if (adminToken) {
+                try {
+                    await AV.User.become(adminToken);
+                    isAdmin = true;
+                } catch (e) {
+                    sessionStorage.removeItem('adminToken');
+                }
+            }
+
+            if (!AV.User.current()) {
+                try {
+                    await AV.User.loginAnonymously();
+                } catch (e) {
+                    console.error('Anonymous login failed!', e);
+                    showToast('无法连接到服务器');
+                    return;
+                }
+            }
+
+            await loadDataAndSubscribe();
+
+            if(isAdmin) {
+                sessionStorage.setItem('isAdmin', 'true');
+                enableAdminMode();
+            }
+            renderCalendar();
         }
 
         document.getElementById('prev-month').addEventListener('click', () => { currentMonth = currentMonth.subtract(1, 'month'); renderCalendar(); });
@@ -683,6 +747,7 @@
         document.getElementById('unavailable-prev-month').addEventListener('click', () => { unavailableCalendarMonth = unavailableCalendarMonth.subtract(1, 'month'); renderUnavailableCalendar(); });
         document.getElementById('unavailable-next-month').addEventListener('click', () => { unavailableCalendarMonth = unavailableCalendarMonth.add(1, 'month'); renderUnavailableCalendar(); });
         document.getElementById('save-unavailable-dates').addEventListener('click', saveUnavailableDates);
+        document.getElementById('admin-logout-btn').addEventListener('click', handleAdminLogout);
         document.querySelectorAll('[data-close-modal]').forEach(el => { el.addEventListener('click', () => closeModal(el.dataset.closeModal)); });
         document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
             const modal = backdrop.parentElement;
@@ -691,10 +756,9 @@
             }
         });
 
-        initializeData();
+        main();
 
     </script>
 </body>
 </html>
-
 
